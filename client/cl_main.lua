@@ -1,14 +1,46 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
 -- [[ Variables ]] --
-local pedSpawned = false
-local PedCreated = {}
+local pedSpawned2 = false
+local PedCreated2 = {}
+
+-- [[ Functions ]] --
+local VehicleItems = {
+    [1] = {
+        name = "weed_brick",
+        amount = 22,
+        info = {},
+        type = "item",
+        slot = 1,
+    },
+}
+
+function SetCarItemsInfo()
+	local items = {}
+	for k, item in pairs(VehicleItems) do
+		local itemInfo = QBCore.Shared.Items[item.name:lower()]
+		items[item.slot] = {
+			name = itemInfo["name"],
+			amount = tonumber(item.amount),
+			info = item.info,
+			label = itemInfo["label"],
+			description = itemInfo["description"] and itemInfo["description"] or "",
+			weight = itemInfo["weight"],
+			type = itemInfo["type"],
+			unique = itemInfo["unique"],
+			useable = itemInfo["useable"],
+			image = itemInfo["image"],
+			slot = item.slot,
+		}
+	end
+	
+	VehicleItems = items
+end
 
 -- [[ Net Events ]] --
 RegisterNetEvent('LENT-CliffordRun:Client:StartMainEvent', function()
     if Config.GlobalSettings['UseClifford'] then
         MissionText("~b~Clifford: ~w~Set Config for Clifford to false!", 5000)
-        break;
 
         local Clifford = exports['LENT-Clifford']:isLoggedIntoClifford()
         if Clifford then
@@ -125,18 +157,18 @@ RegisterNetEvent('LENT-CliffordRun:Client:SetCoords', function()
 
     local EndingPedsList = {
         ["SetFinalPed"] = {
-            ["Ped"] = `mp_m_weed_01`
-        }
+            ["Ped"] = "mp_m_weed_01",
+        },
     }
 
     for k, v in pairs(EndingPedsList) do
-        if PedSpawned then
+        if PedCreated2 then
             return
         end
         
         for k, v in pairs(EndingPedsList) do
-            if not PedCreated[k] then 
-                PedCreated[k] = {} 
+            if not PedCreated2[k] then 
+                PedCreated2[k] = {} 
             end
             
             local current = v["Ped"]
@@ -148,28 +180,28 @@ RegisterNetEvent('LENT-CliffordRun:Client:SetCoords', function()
             end
         
             -- The coords + heading of the Ped
-            PedCreated = CreatePed(0, current, SetEndingCoords.x, SetEndingCoords.y, SetEndingCoords.z-1, SetEndingCoords.w, false, false)
+            PedCreated2 = CreatePed(0, current, SetEndingCoords.x, SetEndingCoords.y, SetEndingCoords.z-1, SetEndingCoords.w, false, false)
         
             -- Start the scneario in a basic loop
-            TaskStartScenarioInPlace(PedCreated, "WORLD_HUMAN_CLIPBOARD", true)
+            TaskStartScenarioInPlace(PedCreated2, "WORLD_HUMAN_CLIPBOARD", true)
         
             -- Let the entity stay in posistion
-            FreezeEntityPosition(PedCreated, true)
+            FreezeEntityPosition(PedCreated2, true)
             -- Set the ped to be invincible
-            SetEntityInvincible(PedCreated, true)
+            SetEntityInvincible(PedCreated2, true)
         
             -- Give the ped a weapon with 999 ammo
-            GiveWeaponToPed(PedCreated, "WEAPON_PISTOL", 999, false, true) -- Give them the specified weapon with ammo
+            GiveWeaponToPed(PedCreated2, "WEAPON_PISTOL", 999, false, true) -- Give them the specified weapon with ammo
             -- Set the weapon equiped
-            SetCurrentPedWeapon(PedCreated, "WEAPON_PISTOL", true)
+            SetCurrentPedWeapon(PedCreated2, "WEAPON_PISTOL", true)
             -- Let the ped switch weapons
-            SetPedCanSwitchWeapon(PedCreated, true) -- Allow them to switch weapon if applicible
+            SetPedCanSwitchWeapon(PedCreated2, true) -- Allow them to switch weapon if applicible
         
             -- Block events like bumping
-            SetBlockingOfNonTemporaryEvents(PedCreated, true)
+            SetBlockingOfNonTemporaryEvents(PedCreated2, true)
         
             -- Target Stuff.. Read Config
-            exports['qb-target']:AddTargetEntity(PedCreated, {
+            exports['qb-target']:AddTargetEntity(PedCreated2, {
                 options = {
                     {
                         type = "client",
@@ -181,18 +213,16 @@ RegisterNetEvent('LENT-CliffordRun:Client:SetCoords', function()
                 distance = 2.0
             })
         
-            pedSpawned = true
+            pedSpawned2 = true
         end
     end
 end)
 
 RegisterNetEvent('LENT-CliffordRun:Client:DeletePeds', function()
     print("Debug: Client Delete Peds Event")
-    for k, v in pairs(PedCreated) do
+    for k, v in pairs(PedCreated2) do
         DeletePed(v)
-        DeletePed(k)
         print("Trying to delete: " .. v)
-        print("Trying to delete: " .. k)
     end
 end)
 
