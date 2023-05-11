@@ -1,8 +1,19 @@
 local QBCore = exports['qb-core']:GetCoreObject()
 
+-- [[ Resource Metadata ]] --
+AddEventHandler('onResourceStop', function(resource)
+    if resource == GetCurrentResourceName() then
+        RemoveBlip(VehicleBlip)
+        RemoveBlip(BuyerBlip)
+    end
+end)
+
 -- [[ Variables ]] --
 local pedSpawned2 = false
 local PedCreated2 = {}
+
+local VehicleBlip = nil
+local BuyerBlip = nil
 
 -- [[ Functions ]] --
 local VehicleItems = {
@@ -50,8 +61,18 @@ RegisterNetEvent('LENT-CliffordRun:Client:StartMainEvent', function()
                 MissionText("~b~Clifford Goon: ~w~I left a location on your ~g~GPS~w~!", 5000)
                 local GetCoords = Config.Coords['StartingCoords']
                 local SetCoords = (GetCoords[math.random(#GetCoords)])
-                SetWaypointOff()
-                SetNewWaypoint(SetCoords)
+                VehicleBlip = AddBlipForCoord(SetCoords.x, SetCoords.y, SetCoords.z)
+    
+                SetBlipSprite(VehicleBlip, 821)
+                SetBlipColour(VehicleBlip, 5)
+                SetBlipScale(VehicleBlip, 0.8)
+                
+                BeginTextCommandSetBlipName("STRING")
+                AddTextComponentString("Vehicle Location")
+                EndTextCommandSetBlipName(VehicleBlip)
+                
+                SetBlipRoute(VehicleBlip, true)
+                SetBlipRouteColour(VehicleBlip, 5)
                 TriggerEvent("LENT-CliffordRun:Client:SpawnVehicle", SetCoords)
                 Objectives.HasRunBeenStarted = true
             end
@@ -65,8 +86,18 @@ RegisterNetEvent('LENT-CliffordRun:Client:StartMainEvent', function()
             MissionText("~b~Clifford Goon: ~w~I left a location on your ~g~GPS~w~!", 5000)
             local GetCoords = Config.Coords['StartingCoords']
             local SetCoords = (GetCoords[math.random(#GetCoords)])
-            SetWaypointOff()
-            SetNewWaypoint(SetCoords)
+            VehicleBlip = AddBlipForCoord(SetCoords.x, SetCoords.y, SetCoords.z)
+    
+            SetBlipSprite(VehicleBlip, 821)
+            SetBlipColour(VehicleBlip, 5)
+            SetBlipScale(VehicleBlip, 0.8)
+            
+            BeginTextCommandSetBlipName("STRING")
+            AddTextComponentString("Vehicle Location")
+            EndTextCommandSetBlipName(VehicleBlip)
+            
+            SetBlipRoute(VehicleBlip, true)
+            SetBlipRouteColour(VehicleBlip, 5)
             TriggerEvent("LENT-CliffordRun:Client:SpawnVehicle", SetCoords)
             Objectives.HasRunBeenStarted = true
         end
@@ -78,7 +109,7 @@ RegisterNetEvent('LENT-CliffordRun:Client:EndCliffordRun', function()
     if Objectives.HasRunBeenStarted then
         if QBCore.Functions.HasItem('weed_brick', 22) then
             TriggerServerEvent('LENT-CliffordRun:Server:EndCliffordRun')
-
+            RemoveBlip(BuyerBlip)
             Objectives.HasRunBeenStarted = false
             Objectives.HasRunBeenCompleted = true
         end
@@ -89,11 +120,9 @@ end)
 RegisterNetEvent('LENT-Clifford:Client:SendFinalEmail', function()
     local coords = GetEntityCoords(PlayerPedId())
     local closestVehicle, distance = QBCore.Functions.GetClosestVehicle(coords)
-    print(closestVehicle, distance)
     if distance < 100 then 
         local DrugRunCar = isDrugRunCar(closestVehicle)
         if DrugRunCar then
-            print("Deleting vehicle")
             NetworkRequestControlOfEntity(closestVehicle)
             QBCore.Functions.DeleteVehicle(closestVehicle)
         else
@@ -127,7 +156,6 @@ RegisterNetEvent('LENT-CliffordRun:Client:SpawnVehicle', function(SetCoords)
         Wait(10)
     end
 
-    local GetMyPed = PlayerPedId()
     local GetAllPlates = Config.VehicleSettings['Plates']
     local SetPlate = (GetAllPlates[math.random(#GetAllPlates)])
 
@@ -153,7 +181,18 @@ RegisterNetEvent('LENT-CliffordRun:Client:SetCoords', function()
     local SetEndingCoords = (GetEndingCoords[math.random(#GetEndingCoords)])
 
     SetWaypointOff()
-    SetNewWaypoint(SetEndingCoords)
+    BuyerBlip = AddBlipForCoord(SetEndingCoords.x, SetEndingCoords.y, SetEndingCoords.z)
+    
+    SetBlipSprite(BuyerBlip, 1)
+    SetBlipColour(BuyerBlip, 5)
+    SetBlipScale(BuyerBlip, 0.8)
+    
+    BeginTextCommandSetBlipName("STRING")
+    AddTextComponentString("Buyer Location")
+    EndTextCommandSetBlipName(BuyerBlip)
+    
+    SetBlipRoute(BuyerBlip, true)
+    SetBlipRouteColour(BuyerBlip, 5)
 
     local EndingPedsList = {
         ["SetFinalPed"] = {
@@ -161,12 +200,9 @@ RegisterNetEvent('LENT-CliffordRun:Client:SetCoords', function()
         },
     }
 
-    for k, v in pairs(EndingPedsList) do
-        if PedCreated2 then
-            return
-        end
-        
+    for k, v in pairs(EndingPedsList) do        
         for k, v in pairs(EndingPedsList) do
+            print(EndingPedsList)
             if not PedCreated2[k] then 
                 PedCreated2[k] = {} 
             end
@@ -189,14 +225,7 @@ RegisterNetEvent('LENT-CliffordRun:Client:SetCoords', function()
             FreezeEntityPosition(PedCreated2, true)
             -- Set the ped to be invincible
             SetEntityInvincible(PedCreated2, true)
-        
-            -- Give the ped a weapon with 999 ammo
-            GiveWeaponToPed(PedCreated2, "WEAPON_PISTOL", 999, false, true) -- Give them the specified weapon with ammo
-            -- Set the weapon equiped
-            SetCurrentPedWeapon(PedCreated2, "WEAPON_PISTOL", true)
-            -- Let the ped switch weapons
-            SetPedCanSwitchWeapon(PedCreated2, true) -- Allow them to switch weapon if applicible
-        
+
             -- Block events like bumping
             SetBlockingOfNonTemporaryEvents(PedCreated2, true)
         
@@ -220,9 +249,11 @@ end)
 
 RegisterNetEvent('LENT-CliffordRun:Client:DeletePeds', function()
     print("Debug: Client Delete Peds Event")
+    RemoveBlip(VehicleBlip)
+    RemoveBlip(BuyerBlip)
     for k, v in pairs(PedCreated2) do
-        DeletePed(v)
-        print("Trying to delete: " .. v)
+        print("Ped K:" .. k)
+        DeletePed(k)
     end
 end)
 
@@ -240,9 +271,9 @@ CreateThread(function()
                 Wait(5000)
                 if not Events.VehicleDistanceHasBeenTriggered then
                     if not Events.HasDispatchBeenNotified then
+                        RemoveBlip(VehicleBlip)
                         MissionText("~d~Radio: ~w~Keys are in the vehicle for you!", 5000)
                         MissionText("~d~Radio: ~w~The vehicle has " .. Config.GlobalSettings['Tracker']['TrackerAmount'] .. " trackers! Cops are on their way!", 5000)
-
                         Events.VehicleDistanceHasBeenTriggered = true
                         Events.HasDispatchBeenNotified = true
                     end

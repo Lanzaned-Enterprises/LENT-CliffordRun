@@ -25,7 +25,7 @@ Config.Coords = {
         -- Humane Pass
         vector4(2912.82, 4354.09, 50.3, 201.17),
     },
-    ['EndingCoords'] = { -- VECTOR3 | Ped Location
+    ['EndingCoords'] = { -- VECTOR4 | Ped Location
         -- Train Hard
         vector4(2929.67, 4623.42, 48.72, 47.63),
         -- Broken Bridge

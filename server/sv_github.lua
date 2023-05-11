@@ -1,5 +1,5 @@
 --[[ Version Checker ]] --
-local version = 000
+local version = 200
 
 -- [[ Settings ]] --
 -- [[ Discord Settings ]] --
@@ -12,25 +12,6 @@ AddEventHandler("onResourceStart", function(resource)
         checkResourceVersion()
     end
 end)
-
-function checkUpdateEmbed(color, name, message, footer)
-    local content = {
-        {
-            ["color"] = color,
-            ["title"] = " " .. name .. " ",
-            ["description"] = message,
-            ["footer"] = {
-                ["text"] = " " .. footer .. " ",
-            },
-        }
-    }
-    PerformHttpRequest(DISCORD_WEBHOOK, function(err, text, headers) end, 
-    'POST', json.encode({
-        username = DISCORD_NAME, 
-        embeds = content, 
-        avatar_url = DISCORD_IMAGE
-    }), { ['Content-Type'] = 'application/json '})
-end
 
 function checkResourceVersion()
     PerformHttpRequest("https://raw.githubusercontent.com/Lanzaned-Enterprises/LENT-CliffordRun/main/version.txt", function(err, text, headers)
